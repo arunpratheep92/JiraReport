@@ -180,7 +180,7 @@
 		</repository>
 	</repositories>
 	<build>
-		<finalName>jira-cli</finalName>
+		<finalName>jira-report</finalName>
 		<resources>
 			<resource>
 				<filtering>true</filtering>
