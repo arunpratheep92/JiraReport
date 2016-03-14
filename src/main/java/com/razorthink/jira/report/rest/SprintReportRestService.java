@@ -1,5 +1,6 @@
 package com.razorthink.jira.report.rest;
 
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,28 +13,28 @@ import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.report.domain.AggregateUserReport;
 import com.razorthink.jira.report.exception.DataException;
 import com.razorthink.jira.report.login.service.LoginService;
-import com.razorthink.jira.report.userReport.service.UserReportService;
+import com.razorthink.jira.report.sprintReport.service.SprintReportService;
 import com.razorthink.jira.report.utils.Response;
 
 @RestController
-@RequestMapping( "/userReport" )
-public class UserReportRestService {
+@RequestMapping( "/sprintReport" )
+public class SprintReportRestService {
 
 	@Autowired
-	UserReportService userReporService;
+	SprintReportService sprintReportService;
 
 	@Autowired
 	LoginService loginService;
 
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	@RequestMapping( value = "/getUserReport", method = RequestMethod.POST )
-	public ResponseEntity<Response> getUserReport( @RequestBody Map<String, String> params )
+	@RequestMapping( value = "/getSprintReport", method = RequestMethod.POST )
+	public ResponseEntity<Response> getSprintReport( @RequestBody Map<String, String> params )
 	{
 		Response response = new Response();
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
-			AggregateUserReport report = userReporService.getUserReport(params, restClient);
+			HashMap<String, AggregateUserReport> report = sprintReportService.getSprintReport(params, restClient);
 			response.setErrorCode(null);
 			response.setErrorMessage(null);
 			response.setObject(report);
@@ -54,5 +55,4 @@ public class UserReportRestService {
 			return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-
 }

@@ -90,25 +90,21 @@ public class UserReport {
 		this.assignee = assignee;
 	}
 
-	
 	public String getReporterDiplayName()
 	{
 		return reporterDiplayName;
 	}
 
-	
 	public void setReporterDiplayName( String reporterDiplayName )
 	{
 		this.reporterDiplayName = reporterDiplayName;
 	}
 
-	
 	public String getAssigneeDiplayName()
 	{
 		return assigneeDiplayName;
 	}
 
-	
 	public void setAssigneeDiplayName( String assigneeDiplayName )
 	{
 		this.assigneeDiplayName = assigneeDiplayName;

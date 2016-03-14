@@ -58,7 +58,6 @@ public class LoginServiceImpl implements LoginService {
 			return restClient;
 		}
 		catch( Exception e )
-
 		{
 			logger.error(e.getMessage());
 			throw new DataException(HttpStatus.UNAUTHORIZED.name(), "User not logged in");

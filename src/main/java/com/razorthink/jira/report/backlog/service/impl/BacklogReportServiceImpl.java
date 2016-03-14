@@ -1,4 +1,4 @@
-package com.razorthink.jira.report.userReport.service.impl;
+package com.razorthink.jira.report.backlog.service.impl;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -16,44 +16,29 @@ import org.springframework.stereotype.Service;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.util.concurrent.Promise;
-import com.razorthink.jira.report.domain.AggregateUserReport;
+import com.razorthink.jira.report.backlog.service.BacklogReportService;
 import com.razorthink.jira.report.domain.UserReport;
-import com.razorthink.jira.report.userReport.service.UserReportService;
 import com.razorthink.jira.report.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
 
-/**
- * 
- * @author arun
- *
- */
 @Service
-public class UserReportServiceImpl implements UserReportService {
+public class BacklogReportServiceImpl implements BacklogReportService {
 
 	@Autowired
 	private Environment env;
-
-	private static final Logger logger = LoggerFactory.getLogger(UserReportServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(BacklogReportServiceImpl.class);
 
 	/* (non-Javadoc)
-	 * @see com.razorthink.jira.report.userReport.service.impl.UserReportService#getUserReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	 * @see com.razorthink.jira.report.backlog.service.impl.BacklogReportService#getBacklogReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public AggregateUserReport getUserReport( Map<String, String> params, JiraRestClient restClient )
+	public List<UserReport> getBacklogReport( Map<String, String> params, JiraRestClient restClient )
 	{
-		logger.debug("getUserReport");
-		String sprint = params.get("sprint");
-		String user = params.get("user");
+		logger.debug("getBacklogReport");
 		String project = params.get("project");
-		String export = params.get("export");
-		Integer actualHours = 0;
-		Integer estimatedHours = 0;
-		Integer totalTasks = 0;
-		AggregateUserReport report = new AggregateUserReport();
 		List<UserReport> issueList = new ArrayList<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
-				.searchJql("assignee = '" + user + "' AND sprint = '" + sprint + "' AND project = '" + project + "'")
-				.claim().getIssues();
+				.searchJql("project = '" + project + "' AND sprint is EMPTY AND resolution = Unresolved and status != Closed").claim().getIssues();
 		for( Issue issueValue : retrievedIssue )
 		{
 			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
@@ -127,14 +112,6 @@ public class UserReportServiceImpl implements UserReportService {
 					{
 						userReport.setRemainingEstimateMinutes(0);
 					}
-					if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
-					{
-						estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
-					}
-					if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
-					{
-						actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
-					}
 				}
 				if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
 				{
@@ -163,48 +140,14 @@ public class UserReportServiceImpl implements UserReportService {
 					}
 				}
 				issueList.add(userReport);
-				totalTasks++;
 			}
 			catch( InterruptedException | ExecutionException e )
 			{
 				logger.error("Error:" + e.getMessage());
 			}
 		}
-		if( export.equals("true") )
-		{
-			ConvertToCSV exportToCSV = new ConvertToCSV();
-			exportToCSV.exportToCSV(env.getProperty("csv.filename")+project+"_"+sprint+"_"+user+".csv", issueList);
-		}
-		report.setIssues(issueList);
-		Pattern patter = Pattern
-				.compile("\\[\".*\\[.*,state=(.*),name=(.*),startDate=(.*),endDate=(.*),completeDate=(.*),.*\\]");
-		Matcher matcher = patter.matcher(sprint);
-		if( matcher.find() )
-		{
-			report.setSprintName(matcher.group(2));
-			TemporalAccessor temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-					.parse(matcher.group(3));
-			String startdate = DateTimeFormatter.ofPattern("dd/MMM/yy,HH:mm").format(temporal);
-			report.setSprintStartDate(startdate);
-			temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(matcher.group(4));
-			String endDate = DateTimeFormatter.ofPattern("dd/MMM/yy,HH:mm").format(temporal);
-			report.setSprintEndDate(endDate);
-			if( matcher.group(5).equals("<null>") )
-			{
-				report.setActualsprintEndDate("Open Sprint");
-			}
-			else
-			{
-				temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX").parse(matcher.group(5));
-				String actualEndDate = DateTimeFormatter.ofPattern("dd/MMM/yy,HH:mm").format(temporal);
-				report.setActualsprintEndDate(actualEndDate);
-			}
-			actualHours = actualHours / 60;
-			report.setActualHours(actualHours);
-			estimatedHours = estimatedHours / 60;
-			report.setEstimatedHours(estimatedHours);
-			report.setTotalTasks(totalTasks);
-		}
-		return report;
+		ConvertToCSV exportToCSV = new ConvertToCSV();
+		exportToCSV.exportToCSV(env.getProperty("csv.filename")+project+"_backlog.csv", issueList);
+		return issueList;
 	}
 }

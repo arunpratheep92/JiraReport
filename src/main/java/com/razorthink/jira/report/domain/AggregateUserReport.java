@@ -11,6 +11,7 @@ public class AggregateUserReport {
 	private String actualsprintEndDate;
 	private Integer estimatedHours;
 	private Integer actualHours;
+	private Integer totalTasks;
 
 	public List<UserReport> getIssues()
 	{
@@ -80,6 +81,16 @@ public class AggregateUserReport {
 	public void setActualHours( Integer actualHours )
 	{
 		this.actualHours = actualHours;
+	}
+
+	public Integer getTotalTasks()
+	{
+		return totalTasks;
+	}
+
+	public void setTotalTasks( Integer totalTasks )
+	{
+		this.totalTasks = totalTasks;
 	}
 
 }

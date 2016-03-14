@@ -35,10 +35,17 @@ public class LoginRestService {
 		}
 		catch( DataException e )
 		{
-			response.setErrorCode(HttpStatus.UNAUTHORIZED.name());
+			response.setErrorCode(HttpStatus.UNAUTHORIZED.toString());
 			response.setErrorMessage("Invalid Credentials");
 			response.setObject(null);
 			return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+		}
+		catch( Exception e )
+		{
+			response.setErrorCode(HttpStatus.INTERNAL_SERVER_ERROR.toString());
+			response.setErrorMessage(e.getMessage());
+			response.setObject(null);
+			return new ResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 }
