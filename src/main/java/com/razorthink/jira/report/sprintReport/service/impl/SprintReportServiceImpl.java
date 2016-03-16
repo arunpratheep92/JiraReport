@@ -62,7 +62,7 @@ public class SprintReportServiceImpl implements SprintReportService {
 			}
 		}
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename"), issueList);
+		exportToCSV.exportToCSV(env.getProperty("csv.filename"+project+"_"+sprint+".csv"), issueList);
 		/*for( Issue issue : retrievedIssue )
 		{
 			if( issue.getAssignee() != null )

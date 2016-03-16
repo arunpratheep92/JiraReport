@@ -18,7 +18,7 @@ import com.razorthink.jira.report.utils.Response;
 
 @RestController
 @RequestMapping( "/backlogReport" )
-public class BacklogRestService {
+public class BacklogReportRestService {
 
 	@Autowired
 	BacklogReportService backlogReportService;
@@ -42,7 +42,7 @@ public class BacklogRestService {
 		}
 		catch( DataException e )
 		{
-			response.setErrorCode(HttpStatus.UNAUTHORIZED.name());
+			response.setErrorCode(HttpStatus.UNAUTHORIZED.toString());
 			response.setErrorMessage(e.getMessage());
 			response.setObject(null);
 			return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);

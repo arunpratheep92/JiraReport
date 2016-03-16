@@ -76,16 +76,10 @@ public class UserReportServiceImpl implements UserReportService {
 				{
 					userReport.setAssignee("Unassigned");
 				}
-				TemporalAccessor temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-						.parse(issue.get().getCreationDate().toString());
-				String createDate = DateTimeFormatter.ofPattern("MM/dd/yy HH:mm:ss").format(temporal);
-				userReport.setCreationDate(createDate);
+				userReport.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
 				if( issue.get().getUpdateDate() != null )
 				{
-					temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-							.parse(issue.get().getUpdateDate().toString());
-					String updateDate = DateTimeFormatter.ofPattern("MM/dd/yy HH:mm:ss").format(temporal);
-					userReport.setUpdateDate(updateDate);
+					userReport.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
 				}
 				else
 				{
@@ -173,7 +167,8 @@ public class UserReportServiceImpl implements UserReportService {
 		if( export.equals("true") )
 		{
 			ConvertToCSV exportToCSV = new ConvertToCSV();
-			exportToCSV.exportToCSV(env.getProperty("csv.filename")+project+"_"+sprint+"_"+user+".csv", issueList);
+			exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_" + sprint + "_" + user + ".csv",
+					issueList);
 		}
 		report.setIssues(issueList);
 		Pattern patter = Pattern

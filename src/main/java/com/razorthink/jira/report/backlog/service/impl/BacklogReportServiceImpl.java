@@ -1,7 +1,5 @@
 package com.razorthink.jira.report.backlog.service.impl;
 
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.util.concurrent.Promise;
 import com.razorthink.jira.report.backlog.service.BacklogReportService;
 import com.razorthink.jira.report.domain.UserReport;
+import com.razorthink.jira.report.exception.DataException;
 import com.razorthink.jira.report.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
 
@@ -37,8 +37,9 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 		logger.debug("getBacklogReport");
 		String project = params.get("project");
 		List<UserReport> issueList = new ArrayList<>();
-		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
-				.searchJql("project = '" + project + "' AND sprint is EMPTY AND resolution = Unresolved and status != Closed").claim().getIssues();
+		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(
+				"project = '" + project + "' AND sprint is EMPTY AND resolution = Unresolved and status != Closed")
+				.claim().getIssues();
 		for( Issue issueValue : retrievedIssue )
 		{
 			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
@@ -61,16 +62,10 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 				{
 					userReport.setAssignee("Unassigned");
 				}
-				TemporalAccessor temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-						.parse(issue.get().getCreationDate().toString());
-				String createDate = DateTimeFormatter.ofPattern("MM/dd/yy HH:mm:ss").format(temporal);
-				userReport.setCreationDate(createDate);
+				userReport.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
 				if( issue.get().getUpdateDate() != null )
 				{
-					temporal = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
-							.parse(issue.get().getUpdateDate().toString());
-					String updateDate = DateTimeFormatter.ofPattern("MM/dd/yy HH:mm:ss").format(temporal);
-					userReport.setUpdateDate(updateDate);
+					userReport.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
 				}
 				else
 				{
@@ -144,10 +139,11 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 			catch( InterruptedException | ExecutionException e )
 			{
 				logger.error("Error:" + e.getMessage());
+				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 			}
 		}
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename")+project+"_backlog.csv", issueList);
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_backlog.csv", issueList);
 		return issueList;
 	}
 }
